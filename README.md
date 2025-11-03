@@ -22,3 +22,6 @@ $ pip install flask
 ```
 
 Luo tietokannan taulut ja lisää alkutiedot: 
+
+$ sqlite3 database.db < schema.sql
+$ sqlite3 database.db < init.sql
