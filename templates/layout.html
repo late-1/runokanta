@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>{% block title %}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/main.css">
+</head>
+
+<body>
+  <h1>runokanta</h1>
+
+  {% if session.user_id %}
+  <p>
+    olet kirjautunut nimellä <a href="/user/{{ session.user_id }}">{{ session.username }}</a>
+  </p>
+  {% endif %}
+
+  <p>
+    <a href="/">etusivu</a> |
+    <a href="/find_item">hae runoja</a> |
+  {% if session.user_id %}
+    <a href="/new_item">uusi runo</a> |
+    <a href="/logout">kirjaudu ulos</a>
+  {% else %}
+    <a href="/login">kirjaudu sisään</a> |
+    <a href="/register">luo tunnus</a>
+  {% endif %}
+  </p>
+
+  {% for message in get_flashed_messages() %}
+  <div class="info">
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  {% block content %}{% endblock %}  
+</body>
+
+</html>

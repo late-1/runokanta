@@ -1,0 +1,20 @@
+body {
+  margin: auto;
+  max-width: 50em;
+  font-family: monospace;
+  background-color: rgba(53, 56, 57, 0.536);
+}
+
+.item {
+  border: 2px solid black;
+  margin: 1em;
+  padding: 0.2em 0.5em;  
+}
+
+.info {
+  border: 2px solid black;
+  margin: 1em;
+  padding: 0.5em;
+  background-color: blue;
+  color: white;
+}
