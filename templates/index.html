@@ -9,7 +9,7 @@
   <ul>
     {% for poem in poems %}
       <li>
-        <strong>{{ poem.title }}</strong> — {{ poem.username}}<br>
+        <a href="/poem/{{ poem['id'] }}"><strong>{{ poem['title'] }}</strong></a> — {{ poem['username'] }}<br>        
         <small>{{ poem.published }}</small><br>
         <p>{{ poem.content }}</p>
       </li>

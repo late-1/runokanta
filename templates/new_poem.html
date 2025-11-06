@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block title %}uusi runo{% endblock %}
+
+{% block content %}
+<h2>Uusi runo</h2>
+<form action="{{ url_for('create_poem') }}" method="post" novalidate>
+  <p>
+    <label for="title">otsikko:</label><br />
+    <input type="text" name="title" id="title" maxlength="50" required />
+  </p>
+
+  <p>
+    <label for="content"></label><br />
+    <textarea name="content" id="content" rows="8" cols="60" maxlength="1000" required></textarea>
+  </p>
+
+  <fieldset style="margin-top:1rem">
+    <legend>runolaji</legend>
+    <div class="checkbox-grid">
+      <label><input type="checkbox" name="genres[]" value="haiku"> haiku</label>
+      <label><input type="checkbox" name="genres[]" value="tanka"> tanka</label>
+      <label><input type="checkbox" name="genres[]" value="freeform"> vapaamittainen</label>
+      <label><input type="checkbox" name="genres[]" value="traditional"> perinteinen</label>
+    </div>
+  </fieldset>
+
+  <fieldset style="margin-top:1rem">
+    <legend>teemat</legend>
+    <label for="themes_select">valitse yksi tai useampi:</label><br />
+    <select id="themes_select" name="themes_select[]" multiple size="6" style="min-width:260px">
+      <option value="rakkaus">rakkaus</option>
+      <option value="ystavyys">ystävyyys</option>
+      <option value="suru">suru</option>
+      <option value="ilo">ilo</option>
+      <option value="unet">unet</option>
+    </select>
+
+    <div style="margin-top:.5rem">
+      <label for="themes_other">tai lisää omat (pilkuilla):</label><br />
+      <input type="text" id="themes_other" name="themes_other"
+             placeholder="esim. kissat,koirat" />
+    </div>
+  </fieldset>
+
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <p style="margin-top:1rem"><input type="submit" value="lisää runo" /></p>
+</form>
+{% endblock %}
