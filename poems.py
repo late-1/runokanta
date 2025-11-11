@@ -152,3 +152,21 @@ def get_all_categories():
 def get_all_themes():
     sql = "SELECT DISTINCT value FROM themes ORDER BY value"
     return db.query(sql)
+
+
+def update_poem(poem_id, title, content):
+    sql = "UPDATE poems SET title = ?, content = ? WHERE id = ?"
+    db.execute(sql, [title, content, poem_id])
+
+
+def update_category(poem_id, category_value):
+    db.execute("DELETE FROM category WHERE poem_id = ?", [poem_id])
+    if category_value:
+        add_category(poem_id, category_value)
+
+
+def update_themes(poem_id, theme_values):
+    db.execute("DELETE FROM themes WHERE poem_id = ?", [poem_id])
+    if theme_values:
+        for theme in theme_values:
+            add_theme(poem_id, theme)

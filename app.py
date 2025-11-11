@@ -1,10 +1,11 @@
 from flask import Flask
 from flask import abort, flash, make_response, redirect, render_template, request, session
 
+import poems
 import users
 import secrets
 import sqlite3
-import poems
+
 
 app = Flask(__name__)
 app.secret_key = "Kissa123"
@@ -123,7 +124,80 @@ def show_poem(poem_id):
                          themes=themes)
 
 
+@app.route("/edit_poem/<int:poem_id>")
+def edit_poem(poem_id):
+    require_login()
+    poem = poems.get_poem(poem_id)
+    if not poem:
+        abort(404)
+    # Check if user owns this poem
+    if poem['user_id'] != session['user_id']:
+        abort(403)
+    categories = poems.get_categories(poem_id)
+    themes = poems.get_themes(poem_id)
+    return render_template("edit_poem.html",
+        poem=poem,
+        categories=categories,
+        themes=themes)
 
+@app.route("/update_poem/<int:poem_id>", methods=["POST"])
+def update_poem(poem_id):
+    require_login()
+    check_csrf()
+    poem = poems.get_poem(poem_id)
+    if not poem:
+        abort(404)
+    # Check if user owns this poem
+    if poem['user_id'] != session['user_id']:
+        abort(403)
+    
+    title = request.form["title"]
+    content = request.form["content"]
+    category = request.form.get("category", "").strip()
+    themes_input = request.form.get("themes", "").strip()
+    
+    if not title or not content:
+        flash("otsikko ja sisältö vaaditaan")
+        return redirect(f"/edit_poem/{poem_id}")
+    
+    # Update the poem
+    poems.update_poem(poem_id, title, content)
+    
+    # Update category
+    poems.update_category(poem_id, category if category else None)
+    
+    # Update themes
+    theme_values = None
+    if themes_input:
+        theme_values = [t.strip() for t in themes_input.split(",") if t.strip()]
+    poems.update_themes(poem_id, theme_values)
+    
+    flash("runo päivitetty onnistuneesti!")
+    return redirect(f"/poem/{poem_id}")
+
+@app.route("/delete_poem/<int:poem_id>", methods=["GET", "POST"])
+def delete_poem_route(poem_id):
+    require_login()
+    poem = poems.get_poem(poem_id)
+    if not poem:
+        abort(404)
+    # Check if user owns this poem
+    if poem['user_id'] != session['user_id']:
+        abort(403)
+    
+    if request.method == "GET":
+        # Show confirmation page
+        return render_template("delete_poem.html", poem=poem)
+    
+    if request.method == "POST":
+        # Actually delete the poem
+        check_csrf()
+        if poems.delete_poem(poem_id, session["user_id"]):
+            flash("runo poistettu onnistuneesti")
+        else:
+            flash("VIRHE: runon poistaminen epäonnistui")
+        return redirect("/")
+    
 
 @app.route("/logout")
 def logout():
