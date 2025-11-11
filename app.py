@@ -4,18 +4,15 @@ from flask import abort, flash, make_response, redirect, render_template, reques
 import users
 import secrets
 import sqlite3
+import poems
 
 app = Flask(__name__)
 app.secret_key = "Kissa123"
 
 @app.route("/")
 def index():
-    if "user_id" in session:
-        return render_template("index.html")
-    return redirect("/login")
-
-   # all_poems = poems.get_all()
-   # return render_template("index.html"), poems=all_poems)
+    all_poems = poems.get_all()
+    return render_template("index.html", poems=all_poems)
 
 def require_login():
     if "user_id" not in session:
@@ -27,6 +24,7 @@ def check_csrf():
         abort(403)
     if request.form["csrf_token"] != session["csrf_token"]:
         abort(403)
+
 
 @app.route("/register")
 def register():
@@ -69,7 +67,64 @@ def login():
         else:
             flash("VIRHE: väärä tunnus tai salasana")
             return redirect("/login")
-        
+
+
+@app.route("/new_poem")
+def new_poem():
+  return render_template("new_poem.html")
+
+
+@app.route("/create_poem", methods=["POST"])
+def create_poem():
+    require_login()
+    check_csrf()
+    
+    title = request.form["title"]
+    content = request.form["content"]
+    user_id = session["user_id"]
+    
+    category = request.form.get("category", "").strip()
+    themes_input = request.form.get("themes", "").strip()
+    
+    theme_values = None
+    if themes_input:
+        theme_values = [t.strip() for t in themes_input.split(",") if t.strip()]
+    
+    if not title or not content:
+        flash("otsikko ja sisältö vaaditaan")
+        return redirect("/new_poem")
+    
+    poem_id = poems.add_poem(
+        title=title,
+        content=content,
+        user_id=user_id,
+        category_value=category if category else None,
+        theme_values=theme_values
+    )
+    
+    return redirect(f"/poem/{poem_id}")
+
+@app.route("/poem/<int:poem_id>")
+def show_poem(poem_id):
+    poem = poems.get_poem(poem_id)
+    if not poem:
+        abort(404)
+    
+    reviews = poems.get_reviews(poem_id)
+    avg_rating = poems.get_average_rating(poem_id)
+    categories = poems.get_categories(poem_id)
+    themes = poems.get_themes(poem_id)
+    
+    return render_template("show_poem.html", 
+                         poem=poem, 
+                         reviews=reviews,
+                         avg_rating=avg_rating,
+                         categories=categories,
+                         themes=themes)
+
+
+
+
 @app.route("/logout")
 def logout():
     if "user_id" in session:
