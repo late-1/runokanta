@@ -1,11 +1,11 @@
-from flask import Flask
-from flask import abort, flash, make_response, redirect, render_template, request, session
-
-import poems
-import users
 import secrets
 import sqlite3
 
+from flask import Flask
+from flask import abort, flash, redirect, render_template, request, session
+
+import poems
+import users
 
 app = Flask(__name__)
 app.secret_key = "Kissa123"
@@ -19,18 +19,15 @@ def require_login():
     if "user_id" not in session:
         abort(403)
 
-
 def check_csrf():
     if "csrf_token" not in request.form:
         abort(403)
     if request.form["csrf_token"] != session["csrf_token"]:
         abort(403)
 
-
 @app.route("/register")
 def register():
     return render_template("register.html")
-
 
 @app.route("/create", methods=["POST"])
 def create():
@@ -40,13 +37,11 @@ def create():
     if password1 != password2:
         flash("VIRHE: salasanat eivät ole samat")
         return redirect("/register")
-
     try:
         users.create_user(username, password1)
     except sqlite3.IntegrityError:
         flash("VIRHE: tunnus on jo varattu")
         return redirect("/register")
-
     return redirect("/")
 
 
@@ -54,74 +49,76 @@ def create():
 def login():
     if request.method == "GET":
         return render_template("login.html")
-
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
         user_id = users.check_login(username, password)
         if user_id:
             session["user_id"] = user_id
             session["username"] = username
             session["csrf_token"] = secrets.token_hex(16)
             return redirect("/")
-        else:
-            flash("VIRHE: väärä tunnus tai salasana")
-            return redirect("/login")
+        flash("VIRHE: väärä tunnus tai salasana")
+        return redirect("/login")
 
 
 @app.route("/new_poem")
 def new_poem():
-  return render_template("new_poem.html")
+    require_login()
+    return render_template("new_poem.html")
 
 
 @app.route("/create_poem", methods=["POST"])
 def create_poem():
     require_login()
     check_csrf()
-    
     title = request.form["title"]
     content = request.form["content"]
     user_id = session["user_id"]
-    
-    category = request.form.get("category", "").strip()
-    themes_input = request.form.get("themes", "").strip()
-    
-    theme_values = None
-    if themes_input:
-        theme_values = [t.strip() for t in themes_input.split(",") if t.strip()]
-    
+
+    category = request.form.get("category")
+
+    themes_select = request.form.getlist("themes_select[]")
+    themes_other = request.form.get("themes_other", "").strip()
+
+    theme_values = []
+    theme_values.extend(themes_select)
+    if themes_other:
+        theme_values.extend([t.strip() for t in themes_other.split(",") if t.strip()])
+
+    theme_values = list(set(theme_values)) if theme_values else None
+
     if not title or not content:
         flash("otsikko ja sisältö vaaditaan")
         return redirect("/new_poem")
-    
+
     poem_id = poems.add_poem(
         title=title,
         content=content,
         user_id=user_id,
-        category_value=category if category else None,
+        category_value=category,
         theme_values=theme_values
     )
-    
+
+    flash("runo lisätty onnistuneesti!")
     return redirect(f"/poem/{poem_id}")
+
 
 @app.route("/poem/<int:poem_id>")
 def show_poem(poem_id):
     poem = poems.get_poem(poem_id)
     if not poem:
         abort(404)
-    
     reviews = poems.get_reviews(poem_id)
     avg_rating = poems.get_average_rating(poem_id)
     categories = poems.get_categories(poem_id)
     themes = poems.get_themes(poem_id)
-    
-    return render_template("show_poem.html", 
-                         poem=poem, 
-                         reviews=reviews,
-                         avg_rating=avg_rating,
-                         categories=categories,
-                         themes=themes)
+    return render_template("show_poem.html",
+        poem=poem,
+        reviews=reviews,
+        avg_rating=avg_rating,
+        categories=categories,
+        themes=themes)
 
 
 @app.route("/edit_poem/<int:poem_id>")
@@ -130,7 +127,6 @@ def edit_poem(poem_id):
     poem = poems.get_poem(poem_id)
     if not poem:
         abort(404)
-    # Check if user owns this poem
     if poem['user_id'] != session['user_id']:
         abort(403)
     categories = poems.get_categories(poem_id)
@@ -140,6 +136,7 @@ def edit_poem(poem_id):
         categories=categories,
         themes=themes)
 
+
 @app.route("/update_poem/<int:poem_id>", methods=["POST"])
 def update_poem(poem_id):
     require_login()
@@ -147,33 +144,30 @@ def update_poem(poem_id):
     poem = poems.get_poem(poem_id)
     if not poem:
         abort(404)
-    # Check if user owns this poem
     if poem['user_id'] != session['user_id']:
         abort(403)
-    
+
     title = request.form["title"]
     content = request.form["content"]
     category = request.form.get("category", "").strip()
     themes_input = request.form.get("themes", "").strip()
-    
+
     if not title or not content:
         flash("otsikko ja sisältö vaaditaan")
         return redirect(f"/edit_poem/{poem_id}")
-    
-    # Update the poem
+
     poems.update_poem(poem_id, title, content)
-    
-    # Update category
+
     poems.update_category(poem_id, category if category else None)
-    
-    # Update themes
+
     theme_values = None
     if themes_input:
         theme_values = [t.strip() for t in themes_input.split(",") if t.strip()]
     poems.update_themes(poem_id, theme_values)
-    
+
     flash("runo päivitetty onnistuneesti!")
     return redirect(f"/poem/{poem_id}")
+
 
 @app.route("/delete_poem/<int:poem_id>", methods=["GET", "POST"])
 def delete_poem_route(poem_id):
@@ -181,23 +175,65 @@ def delete_poem_route(poem_id):
     poem = poems.get_poem(poem_id)
     if not poem:
         abort(404)
-    # Check if user owns this poem
     if poem['user_id'] != session['user_id']:
         abort(403)
-    
+
     if request.method == "GET":
-        # Show confirmation page
         return render_template("delete_poem.html", poem=poem)
-    
+
     if request.method == "POST":
-        # Actually delete the poem
         check_csrf()
         if poems.delete_poem(poem_id, session["user_id"]):
             flash("runo poistettu onnistuneesti")
         else:
             flash("VIRHE: runon poistaminen epäonnistui")
         return redirect("/")
-    
+
+
+@app.route("/find_poem")
+def find_poem():
+    return render_template("find_poem.html")
+
+
+@app.route("/search", methods=["POST"])
+def search():
+    query = request.form.get("query", "").strip()
+    author = request.form.get("author", "").strip()
+
+    results = []
+    search_type = ""
+    search_value = ""
+
+    if query:
+        results = poems.search_poems(query)
+        search_type = "haku"
+        search_value = query
+    elif author:
+        results = poems.search_by_author(author)
+        search_type = "kirjoittaja"
+        search_value = author
+    else:
+        flash("anna hakuehto")
+        return redirect("/find_item")
+
+    return render_template("search_results.html",
+                         poems=results,
+                         search_type=search_type,
+                         search_value=search_value)
+
+
+@app.route("/user/<int:user_id>")
+def show_user(user_id):
+    user = users.get_user(user_id)
+    if not user:
+        abort(404)
+
+    user_poems = poems.get_user_poems(user_id)
+
+    return render_template("user.html",
+                         user=user,
+                         poems=user_poems)
+
 
 @app.route("/logout")
 def logout():

@@ -1,5 +1,5 @@
-import db
 from datetime import datetime
+import db
 
 
 def get_all():
@@ -25,18 +25,17 @@ def get_poem(poem_id):
 
 def add_poem(title, content, user_id, category_value=None, theme_values=None):
     published = datetime.strftime(datetime.now(), '%d-%m-%Y')
-    
     sql = "INSERT INTO poems (title, content, published, user_id) VALUES (?, ?, ?, ?)"
     db.execute(sql, [title, content, published, user_id])
     poem_id = db.last_insert_id()
-    
+
     if category_value:
         add_category(poem_id, category_value)
-    
+
     if theme_values:
         for theme in theme_values:
             add_theme(poem_id, theme)
-    
+
     return poem_id
 
 
@@ -107,41 +106,29 @@ def get_average_rating(poem_id):
 def delete_poem(poem_id, user_id):
     sql = "SELECT user_id FROM poems WHERE id = ?"
     result = db.query(sql, [poem_id])
-    
+
     if not result or result[0]['user_id'] != user_id:
         return False
-    
+
     db.execute("DELETE FROM reviews WHERE poem_id = ?", [poem_id])
     db.execute("DELETE FROM category WHERE poem_id = ?", [poem_id])
     db.execute("DELETE FROM themes WHERE poem_id = ?", [poem_id])
     db.execute("DELETE FROM images WHERE poem_id = ?", [poem_id])
-    
+
     db.execute("DELETE FROM poems WHERE id = ?", [poem_id])
     return True
 
 
-def search_by_category(category_value):
+def search_by_author(username):
     sql = """
-        SELECT DISTINCT p.id, p.title, p.content, p.published, p.user_id, u.username
+        SELECT p.id, p.title, p.content, p.published, p.user_id, u.username
         FROM poems p
         JOIN users u ON p.user_id = u.id
-        JOIN category c ON p.id = c.poem_id
-        WHERE c.value = ?
+        WHERE u.username LIKE ?
         ORDER BY p.published DESC
     """
-    return db.query(sql, [category_value])
-
-
-def search_by_theme(theme_value):
-    sql = """
-        SELECT DISTINCT p.id, p.title, p.content, p.published, p.user_id, u.username
-        FROM poems p
-        JOIN users u ON p.user_id = u.id
-        JOIN themes t ON p.id = t.poem_id
-        WHERE t.value = ?
-        ORDER BY p.published DESC
-    """
-    return db.query(sql, [theme_value])
+    search_term = f"%{username}%"
+    return db.query(sql, [search_term])
 
 
 def get_all_categories():
@@ -170,3 +157,4 @@ def update_themes(poem_id, theme_values):
     if theme_values:
         for theme in theme_values:
             add_theme(poem_id, theme)
+            
