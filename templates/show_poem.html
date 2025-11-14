@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ poem['title'] }}{% endblock %}
+
+{% block content %}
+<h2>{{ poem['title'] }}</h2>
+
+<p><strong>kirjoittaja:</strong> <a href="/user/{{ poem['user_id'] }}">{{ poem['username'] }}</a></p>
+<p><strong>julkaistu:</strong> {{ poem['published'] }}</p>
+
+{% if categories %}
+  <p><strong>kategoria:</strong> 
+    {% for cat in categories %}
+      {{ cat['value'] }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </p>
+{% endif %}
+
+{% if themes %}
+  <p><strong>teemat:</strong> 
+    {% for theme in themes %}
+      {{ theme['value'] }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  </p>
+{% endif %}
+
+<div class="poem-content">
+{{ poem['content'] }}
+</div>
+
+{% if session.user_id == poem['user_id'] %}
+  <a href="/edit_poem/{{ poem['id'] }}">
+    <button type="button" class="btn-edit">muokkaa runoa</button>
+  </a>
+  <a href="/delete_poem/{{ poem['id'] }}">
+    <button type="button" class="btn-delete">poista runo</button>
+  </a>
+{% endif %}
+
+<hr>
+
+<h3>arvostelut</h3>
+
+{% if avg_rating %}
+  <p><strong>keskiarvo:</strong> {{ "%.1f"|format(avg_rating) }} / 10</p>
+{% endif %}
+
+{% if reviews %}
+  <ul>
+    {% for review in reviews %}
+      <li>
+        <strong>{{ review['username'] }}</strong> — arvosana: {{ review['rating'] }}/10<br>
+        <small>{{ review['date'] }}</small>
+        {% if review['comment'] %}
+          <p>{{ review['comment'] }}</p>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>ei vielä arvosteluja.</p>
+{% endif %}
+
+{% if session.user_id %}
+  <h3>lisää arvostelu</h3>
+  <form action="/add_review/{{ poem['id'] }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    
+    <p>
+      <label for="rating">arvosana (1-10)</label>: <br />
+      <input type="number" name="rating" id="rating" min="1" max="10" required />
+    </p>
+    
+    <p>
+      <label for="comment">kommentti (valinnainen)</label>: <br />
+      <textarea name="comment" id="comment" rows="4" cols="50"></textarea>
+    </p>
+    
+    <input type="submit" value="lähetä arvostelu" />
+  </form>
+{% endif %}
+
+<p><a href="/">takaisin etusivulle</a></p>
+{% endblock %}

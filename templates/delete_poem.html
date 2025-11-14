@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}poista runo{% endblock %}
+
+{% block content %}
+<h2>poista runo</h2>
+
+<p>haluatko varmasti poistaa tämän runon?</p>
+
+<div class="delete-warning">
+  <h3>{{ poem['title'] }}</h3>
+  <p><strong>kirjoittaja:</strong> {{ poem['username'] }}</p>
+  <p><strong>julkaistu:</strong> {{ poem['published'] }}</p>
+  <div class="poem-content">
+    {{ poem['content'] }}
+  </div>
+</div>
+
+<p class="warning-text"><strong>varoitus:</strong> tämä toiminto poistaa runon pysyvästi, mukaan lukien kaikki arvostelut ja kommentit.</p>
+
+<form action="/delete_poem/{{ poem['id'] }}" method="post" style="display: inline;">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <input type="submit" value="kyllä, poista runo" class="btn-delete" />
+</form>
+
+<a href="/poem/{{ poem['id'] }}">
+  <button type="button" class="btn-edit">peruuta</button>
+</a>
+{% endblock %}

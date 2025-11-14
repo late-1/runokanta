@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block title %}muokkaa runoa{% endblock %}
+
+{% block content %}
+<h2>muokkaa runoa</h2>
+
+<form action="/update_poem/{{ poem['id'] }}" method="post">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  
+  <p>
+    <label for="title">otsikko</label>: <br />
+    <input type="text" name="title" id="title" value="{{ poem['title'] }}" required />
+  </p>
+  
+  <p>
+    <label for="content">sisältö</label>: <br />
+    <textarea name="content" id="content" rows="10" cols="50" required>{{ poem['content'] }}</textarea>
+  </p>
+  
+  <p>
+    <label for="category">kategoria (valinnainen)</label>: <br />
+    <input type="text" name="category" id="category" value="{% if categories %}{{ categories[0]['value'] }}{% endif %}" />
+  </p>
+  
+  <p>
+    <label for="themes">teemat (erottele pilkuilla, valinnainen)</label>: <br />
+    <input type="text" name="themes" id="themes" value="{% if themes %}{% for theme in themes %}{{ theme['value'] }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}" />
+  </p>
+  
+  <input type="submit" value="tallenna muutokset" />
+</form>
+
+<p><a href="/poem/{{ poem['id'] }}">peruuta</a></p>
+{% endblock %}
