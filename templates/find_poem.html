@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block title %}hae runoja{% endblock %}
+
+{% block content %}
+<h2>hae runoja</h2>
+
+<form action="/find_poem" method="get">
+  <p>
+    <label for="query">hakusana</label>: <br />
+    <input type="text" name="query" id="query" value="{{ query }}"/>
+  </p>
+  
+  <input type="submit" value="hae" />
+</form>
+
+{% if query %}
+<h3>tulokset</h3>
+{% if results %}
+  <ul>
+    {% for poem in results %}
+      <li>
+        <a href="/poem/{{ poem['id'] }}"><strong>{{ poem['title'] }}</strong></a> — {{ poem['username'] }}<br>        
+        <small>{{ poem.published }}</small>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>ei tuloksia haulle "{{ query }}"</p>
+{% endif %}
+{% endif %}
+
+<hr>
+
+<h3>selaa kaikkia</h3>
+<ul>
+  <li><a href="/">kaikki runot</a></li>
+</ul>
+{% endblock %}
