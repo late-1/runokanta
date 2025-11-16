@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ user['username'] }}{% endblock %}
+
+{% block content %}
+<h2>käyttäjä: {{ user['username'] }}</h2>
+
+<h3>runot ({{ poems|length }})</h3>
+
+{% if poems %}
+  <ul>
+    {% for poem in poems %}
+      <li>
+        <a href="/poem/{{ poem['id'] }}"><strong>{{ poem['title'] }}</strong></a><br>
+        <small>julkaistu: {{ poem['published'] }}</small>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>ei vielä runoja.</p>
+{% endif %}
+
+<p><a href="/">takaisin etusivulle</a></p>
+{% endblock %}
