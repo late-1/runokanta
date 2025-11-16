@@ -192,34 +192,14 @@ def delete_poem_route(poem_id):
 
 @app.route("/find_poem")
 def find_poem():
-    return render_template("find_poem.html")
-
-
-@app.route("/search", methods=["POST"])
-def search():
-    query = request.form.get("query", "").strip()
-    author = request.form.get("author", "").strip()
-
+    query = request.args.get("query", "").strip()
     results = []
-    search_type = ""
-    search_value = ""
-
+    
     if query:
         results = poems.search_poems(query)
-        search_type = "haku"
-        search_value = query
-    elif author:
-        results = poems.search_by_author(author)
-        search_type = "kirjoittaja"
-        search_value = author
-    else:
-        flash("anna hakuehto")
-        return redirect("/find_item")
+    
+    return render_template("find_poem.html", query=query, results=results)
 
-    return render_template("search_results.html",
-                         poems=results,
-                         search_type=search_type,
-                         search_value=search_value)
 
 
 @app.route("/user/<int:user_id>")
