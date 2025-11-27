@@ -25,9 +25,11 @@ def check_csrf():
     if request.form["csrf_token"] != session["csrf_token"]:
         abort(403)
 
+
 @app.route("/register")
 def register():
     return render_template("register.html")
+
 
 @app.route("/create", methods=["POST"])
 def create():
@@ -194,10 +196,10 @@ def delete_poem_route(poem_id):
 def find_poem():
     query = request.args.get("query", "").strip()
     results = []
-    
+
     if query:
         results = poems.search_poems(query)
-    
+
     return render_template("find_poem.html", query=query, results=results)
 
 
@@ -209,10 +211,11 @@ def show_user(user_id):
         abort(404)
 
     user_poems = poems.get_user_poems(user_id)
-
+    stats = poems.get_user_statistics(user_id)
     return render_template("user.html",
                          user=user,
-                         poems=user_poems)
+                         poems=user_poems,
+                         stats=stats)
 
 
 @app.route("/logout")

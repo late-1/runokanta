@@ -5,6 +5,34 @@
 {% block content %}
 <h2>käyttäjä: {{ user['username'] }}</h2>
 
+<div class="item">
+  <h3>tilastot</h3>
+  
+  <p><strong>runoja yhteensä:</strong> {{ stats.total_poems }}</p>
+  
+  {% if stats.avg_rating %}
+    <p><strong>runojen keskiarvo:</strong> {{ "%.2f"|format(stats.avg_rating) }} / 10 ({{ stats.total_reviews }} arvostelua)</p>
+  {% else %}
+    <p><strong>runojen keskiarvo:</strong> ei vielä arvosteluja</p>
+  {% endif %}
+  
+  {% if stats.top_categories %}
+    <p><strong>suosituimmat lajit:</strong>
+      {% for cat in stats.top_categories %}
+        {{ cat['value'] }} ({{ cat['count'] }}){% if not loop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+  
+  {% if stats.top_themes %}
+    <p><strong>suosituimmat teemat:</strong>
+      {% for theme in stats.top_themes %}
+        {{ theme['value'] }} ({{ theme['count'] }}){% if not loop.last %}, {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+</div>
+
 <h3>runot ({{ poems|length }})</h3>
 
 {% if poems %}

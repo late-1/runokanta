@@ -157,4 +157,51 @@ def update_themes(poem_id, theme_values):
     if theme_values:
         for theme in theme_values:
             add_theme(poem_id, theme)
+
+def get_user_statistics(user_id):
+    """Get comprehensive statistics for a user's poems"""
+    stats = {}
+    
+    sql = "SELECT COUNT(*) as count FROM poems WHERE user_id = ?"
+    result = db.query(sql, [user_id])
+    stats['total_poems'] = result[0]['count'] if result else 0
+    
+    sql = """
+        SELECT AVG(r.rating) as avg_rating, COUNT(r.id) as total_reviews
+        FROM reviews r
+        JOIN poems p ON r.poem_id = p.id
+        WHERE p.user_id = ?
+    """
+    result = db.query(sql, [user_id])
+    if result and result[0]['avg_rating']:
+        stats['avg_rating'] = result[0]['avg_rating']
+        stats['total_reviews'] = result[0]['total_reviews']
+    else:
+        stats['avg_rating'] = None
+        stats['total_reviews'] = 0
+    
+    sql = """
+        SELECT c.value, COUNT(*) as count
+        FROM category c
+        JOIN poems p ON c.poem_id = p.id
+        WHERE p.user_id = ?
+        GROUP BY c.value
+        ORDER BY count DESC
+        LIMIT 3
+    """
+    stats['top_categories'] = db.query(sql, [user_id])
+    
+    sql = """
+        SELECT t.value, COUNT(*) as count
+        FROM themes t
+        JOIN poems p ON t.poem_id = p.id
+        WHERE p.user_id = ?
+        GROUP BY t.value
+        ORDER BY count DESC
+        LIMIT 5
+    """
+    stats['top_themes'] = db.query(sql, [user_id])
+    
+    return stats
+
             
