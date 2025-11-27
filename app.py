@@ -203,6 +203,27 @@ def find_poem():
     return render_template("find_poem.html", query=query, results=results)
 
 
+@app.route("/add_review/<int:poem_id>", methods=["POST"])
+def add_review(poem_id):
+    require_login()
+    check_csrf()
+
+    poem = poems.get_poem(poem_id)
+    if not poem:
+        abort(404)
+
+    rating = request.form.get("rating", type=int)
+    comment = request.form.get("comment", "").strip()
+
+    if not rating or rating < 1 or rating > 10:
+        flash("arvosanan täytyy olla välillä 1-10")
+        return redirect(f"/poem/{poem_id}")
+
+    poems.add_review(poem_id, session["user_id"], rating, comment)
+    flash("arvostelu lisätty onnistuneesti!")
+    return redirect(f"/poem/{poem_id}")
+
+
 
 @app.route("/user/<int:user_id>")
 def show_user(user_id):
