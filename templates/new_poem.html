@@ -3,7 +3,7 @@
 
 {% block content %}
 <h2>Uusi runo</h2>
-<form action="{{ url_for('create_poem') }}" method="post" novalidate>
+<form action="{{ url_for('create_poem') }}" method="post" enctype="multipart/form-data" novalidate>
   <p>
     <label for="title">otsikko:</label><br />
     <input type="text" name="title" id="title" maxlength="50" required />
@@ -42,6 +42,14 @@
       <input type="text" id="themes_other" name="themes_other"
              placeholder="esim. kissat,koirat" />
     </div>
+  </fieldset>
+
+    <fieldset class="form-section">
+    <legend>kuva (valinnainen)</legend>
+    <p>
+      <label for="image">lisää kuva runoon:</label><br />
+      <input type="file" name="image" id="image" accept="image/*" />
+    </p>
   </fieldset>
 
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />

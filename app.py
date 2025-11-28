@@ -2,7 +2,7 @@ import secrets
 import sqlite3
 
 from flask import Flask
-from flask import abort, flash, redirect, render_template, request, session
+from flask import abort, flash, redirect, render_template, request, session, make_response
 
 import poems
 import users
@@ -74,6 +74,7 @@ def new_poem():
 def create_poem():
     require_login()
     check_csrf()
+
     title = request.form["title"]
     content = request.form["content"]
     user_id = session["user_id"]
@@ -102,7 +103,24 @@ def create_poem():
         theme_values=theme_values
     )
 
-    flash("runo lisätty onnistuneesti!")
+    has_image = False
+    if 'image' in request.files:
+        image_file = request.files['image']
+        if image_file and image_file.filename != '':
+            image_data = image_file.read()
+
+            max_size = 5 * 1024 * 1024
+            if len(image_data) > max_size:
+                flash("kuva on liian suuri (max 5MB)")
+                return redirect("/new_poem")
+
+            poems.add_image(poem_id, image_data)
+            has_image = True
+
+    if has_image:
+        flash("runo ja kuva lisätty onnistuneesti!")
+    else:
+        flash("runo lisätty onnistuneesti!")
     return redirect(f"/poem/{poem_id}")
 
 
@@ -115,12 +133,14 @@ def show_poem(poem_id):
     avg_rating = poems.get_average_rating(poem_id)
     categories = poems.get_categories(poem_id)
     themes = poems.get_themes(poem_id)
+    has_image = poems.get_image(poem_id) is not None
     return render_template("show_poem.html",
         poem=poem,
         reviews=reviews,
         avg_rating=avg_rating,
         categories=categories,
-        themes=themes)
+        themes=themes,
+        has_image=has_image)
 
 
 @app.route("/edit_poem/<int:poem_id>")
@@ -238,6 +258,16 @@ def show_user(user_id):
                          poems=user_poems,
                          stats=stats)
 
+
+@app.route("/image/<int:poem_id>")
+def show_image(poem_id):
+    image = poems.get_image(poem_id)
+    if not image:
+        abort(404)
+
+    response = make_response(bytes(image))
+    response.headers.set("Content-Type", "image/jpeg")
+    return response
 
 @app.route("/logout")
 def logout():

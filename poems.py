@@ -159,13 +159,12 @@ def update_themes(poem_id, theme_values):
             add_theme(poem_id, theme)
 
 def get_user_statistics(user_id):
-    """Get comprehensive statistics for a user's poems"""
     stats = {}
-    
+
     sql = "SELECT COUNT(*) as count FROM poems WHERE user_id = ?"
     result = db.query(sql, [user_id])
     stats['total_poems'] = result[0]['count'] if result else 0
-    
+
     sql = """
         SELECT AVG(r.rating) as avg_rating, COUNT(r.id) as total_reviews
         FROM reviews r
@@ -179,7 +178,7 @@ def get_user_statistics(user_id):
     else:
         stats['avg_rating'] = None
         stats['total_reviews'] = 0
-    
+
     sql = """
         SELECT c.value, COUNT(*) as count
         FROM category c
@@ -190,7 +189,7 @@ def get_user_statistics(user_id):
         LIMIT 3
     """
     stats['top_categories'] = db.query(sql, [user_id])
-    
+
     sql = """
         SELECT t.value, COUNT(*) as count
         FROM themes t
@@ -201,7 +200,21 @@ def get_user_statistics(user_id):
         LIMIT 5
     """
     stats['top_themes'] = db.query(sql, [user_id])
-    
+
     return stats
 
-            
+
+def add_image(poem_id, image_data):
+    sql = "INSERT INTO images (poem_id, image) VALUES (?, ?)"
+    db.execute(sql, [poem_id, image_data])
+
+
+def get_image(poem_id):
+    sql = "SELECT image FROM images WHERE poem_id = ? LIMIT 1"
+    result = db.query(sql, [poem_id])
+    return result[0]['image'] if result else None
+
+
+def delete_image(poem_id):
+    sql = "DELETE FROM images WHERE poem_id = ?"
+    db.execute(sql, [poem_id])
