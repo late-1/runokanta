@@ -26,14 +26,16 @@
 
   <fieldset class="form-section">
     <legend>teemat</legend>
-    <label for="themes_select">valitse yksi tai useampi:</label><br />
-    <select id="themes_select" name="themes_select[]" multiple size="6" style="min-width:260px">
-      <option value="rakkaus">rakkaus</option>
-      <option value="ystavyys">ystävyyys</option>
-      <option value="suru">suru</option>
-      <option value="ilo">ilo</option>
-      <option value="unet">unet</option>
-    </select>
+    <div class="checkbox-grid">
+      <label><input type="checkbox" name="themes_select[]" value="rakkaus"> rakkaus</label>
+      <label><input type="checkbox" name="themes_select[]" value="ystävyys"> ystävyys</label>
+      <label><input type="checkbox" name="themes_select[]" value="suru"> suru</label>
+      <label><input type="checkbox" name="themes_select[]" value="ilo"> ilo</label>
+      <label><input type="checkbox" name="themes_select[]" value="unet"> unet</label>
+      <label><input type="checkbox" name="themes_select[]" value="kaipuu"> kaipuu</label>
+    </div>
+
+
 
     <div class="themes-extra">
       <label for="themes_other">tai lisää omat (pilkuilla):</label><br />
