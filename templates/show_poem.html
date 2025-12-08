@@ -58,7 +58,7 @@
         <strong>{{ review['username'] }}</strong> — arvosana: {{ review['rating'] }}/10<br>
         <small>{{ review['date'] }}</small>
         {% if review['comment'] %}
-          <p>{{ review['comment'] }}</p>
+          <p class="review-comment">{{ review['comment'] }}</p>
         {% endif %}
       </li>
     {% endfor %}
