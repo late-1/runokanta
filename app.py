@@ -6,9 +6,10 @@ from flask import abort, flash, redirect, render_template, request, session, mak
 
 import poems
 import users
+import config
 
 app = Flask(__name__)
-app.secret_key = "Kissa123"
+app.secret_key = config.secret_key
 
 @app.route("/")
 def index():
@@ -36,13 +37,13 @@ def create():
     username = request.form.get("username", "").strip()
     password1 = request.form.get("password1", "")
     password2 = request.form.get("password2", "")
-    
+
     if not username or not password1:
         flash("VIRHE: tunnus ja salasana vaaditaan")
         return render_template("register.html", username=username)
-    
+
     if password1 != password2:
-        flash("VIRHE: salasanat eivÃ¤t ole samat")
+        flash("VIRHE: salasanat eivät ole samat")
         return render_template("register.html", username=username)
     try:
         users.create_user(username, password1)
@@ -80,7 +81,7 @@ def new_poem():
 def create_poem():
     require_login()
     check_csrf()
-    
+
     title = request.form["title"]
     content = request.form["content"]
     user_id = session["user_id"]
@@ -114,15 +115,15 @@ def create_poem():
         image_file = request.files['image']
         if image_file and image_file.filename != '':
             image_data = image_file.read()
-            
+
             max_size = 5 * 1024 * 1024
             if len(image_data) > max_size:
                 flash("kuva on liian suuri (max 5MB)")
                 return redirect("/new_poem")
-            
+
             poems.add_image(poem_id, image_data)
             has_image = True
-    
+
     if has_image:
         flash("runo ja kuva lisätty onnistuneesti!")
     else:
@@ -270,7 +271,7 @@ def show_image(poem_id):
     image = poems.get_image(poem_id)
     if not image:
         abort(404)
-    
+
     response = make_response(bytes(image))
     response.headers.set("Content-Type", "image/jpeg")
     return response

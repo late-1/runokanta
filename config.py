@@ -1,1 +1,1 @@
-secret_key = "Kissa123"
+secret_key = "16352d4736d5ccff30070037df60c121"
