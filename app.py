@@ -33,17 +33,22 @@ def register():
 
 @app.route("/create", methods=["POST"])
 def create():
-    username = request.form["username"]
-    password1 = request.form["password1"]
-    password2 = request.form["password2"]
+    username = request.form.get("username", "").strip()
+    password1 = request.form.get("password1", "")
+    password2 = request.form.get("password2", "")
+    
+    if not username or not password1:
+        flash("VIRHE: tunnus ja salasana vaaditaan")
+        return render_template("register.html", username=username)
+    
     if password1 != password2:
-        flash("VIRHE: salasanat eivät ole samat")
-        return redirect("/register")
+        flash("VIRHE: salasanat eivÃ¤t ole samat")
+        return render_template("register.html", username=username)
     try:
         users.create_user(username, password1)
     except sqlite3.IntegrityError:
         flash("VIRHE: tunnus on jo varattu")
-        return redirect("/register")
+        return render_template("register.html", username=username)
     flash("tunnus luotu!")
     return redirect("/")
 

@@ -8,7 +8,7 @@
 <form action="/create" method="post">
   <p>
     <label for="username">tunnus</label>: <br />
-    <input type="text" name="username" id="username" />
+    <input type="text" name="username" id="username" value="{{ username or '' }}" />
   </p>
   <p>
     <label for="password1">salasana</label>: <br />
