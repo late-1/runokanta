@@ -40,3 +40,9 @@ CREATE TABLE images (
     poem_id INTEGER REFERENCES poems,
     image BLOB
 );
+
+CREATE INDEX idx_poems_user_id ON poems(user_id);
+CREATE INDEX idx_poems_published ON poems(published);
+CREATE INDEX idx_reviews_poem_id ON reviews(poem_id);
+CREATE INDEX idx_category_poem_id ON category(poem_id);
+CREATE INDEX idx_themes_poem_id ON themes(poem_id);
