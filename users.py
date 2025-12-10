@@ -32,4 +32,3 @@ def check_login(username, password):
         return user_id
     else:
         return None
-
