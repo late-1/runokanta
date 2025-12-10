@@ -1,8 +1,9 @@
 import secrets
 import sqlite3
-
+import math
+import time
 from flask import Flask
-from flask import abort, flash, redirect, render_template, request, session, make_response
+from flask import abort, flash, redirect, render_template, request, session, make_response, g
 
 import poems
 import users
@@ -11,14 +12,38 @@ import config
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
+@app.before_request
+def before_request():
+    g.start_time = time.time()
+
+@app.after_request
+def after_request(response):
+    elapsed_time = round(time.time() - g.start_time, 2)
+    print("elapsed time:", elapsed_time, "s")
+    return response
+
+
 @app.route("/")
-def index():
-    all_poems = poems.get_all()
-    return render_template("index.html", poems=all_poems)
+@app.route("/<int:page>")
+def index(page=1):
+    page_size = 10
+    total_poems = poems.poem_count()
+    page_count = math.ceil(total_poems / page_size)
+    page_count = max(page_count, 1)
+
+    if page < 1:
+        return redirect("/1")
+    if page > page_count:
+        return redirect("/" + str(page_count))
+
+    all_poems = poems.get_all(page, page_size)
+    return render_template("index.html", poems=all_poems, page=page, page_count=page_count)
+
 
 def require_login():
     if "user_id" not in session:
         abort(403)
+
 
 def check_csrf():
     if "csrf_token" not in request.form:
@@ -56,8 +81,6 @@ def create():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "GET":
-        return render_template("login.html")
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -69,6 +92,8 @@ def login():
             return redirect("/")
         flash("VIRHE: väärä tunnus tai salasana")
         return redirect("/login")
+
+    return render_template("login.html")
 
 
 @app.route("/new_poem")
@@ -207,9 +232,6 @@ def delete_poem_route(poem_id):
     if poem['user_id'] != session['user_id']:
         abort(403)
 
-    if request.method == "GET":
-        return render_template("delete_poem.html", poem=poem)
-
     if request.method == "POST":
         check_csrf()
         if poems.delete_poem(poem_id, session["user_id"]):
@@ -217,6 +239,8 @@ def delete_poem_route(poem_id):
         else:
             flash("VIRHE: runon poistaminen epäonnistui")
         return redirect("/")
+
+    return render_template("delete_poem.html", poem=poem)
 
 
 @app.route("/find_poem")
@@ -275,6 +299,7 @@ def show_image(poem_id):
     response = make_response(bytes(image))
     response.headers.set("Content-Type", "image/jpeg")
     return response
+
 
 @app.route("/logout")
 def logout():

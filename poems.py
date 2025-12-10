@@ -2,14 +2,22 @@ from datetime import datetime
 import db
 
 
-def get_all():
+def get_all(page=1, page_size=20):
+    offset = (page - 1) * page_size
     sql = """
         SELECT p.id, p.title, p.content, p.published, p.user_id, u.username
         FROM poems p
         JOIN users u ON p.user_id = u.id
         ORDER BY p.published DESC
+        LIMIT ? OFFSET ?
     """
-    return db.query(sql)
+    return db.query(sql, [page_size, offset])
+
+
+def poem_count():
+    sql = "SELECT COUNT(*) as count FROM poems"
+    result = db.query(sql)
+    return result[0]['count'] if result else 0
 
 
 def get_poem(poem_id):
